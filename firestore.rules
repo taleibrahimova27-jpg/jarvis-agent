@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: agents
+    // Fields: name, role, instructions, memory, userId, createdAt
+    //
+    // Collection: logs
+    // Fields: userId, action, details, status, timestamp
+    //
+    // Collection: user_settings
+    // Fields: apiKeys, systemSettings, updatedAt
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isValidAgent(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.role in ['Research', 'Email Assistant', 'Scheduler', 'Code Expert', 'Data Analyst', 'Content Writer', 'Custom', 'Social Media Manager'] &&
+             data.instructions is string && data.instructions.size() > 0 &&
+             data.userId == request.auth.uid;
+    }
+
+    function isValidLog(data) {
+      return data.userId == request.auth.uid &&
+             data.action is string &&
+             data.status in ['success', 'warning', 'error', 'info'];
+    }
+
+    function isValidTelegramMessage(data) {
+      return data.chatId is string && data.userId is string && data.text is string && data.timestamp is timestamp;
+    }
+
+    function isValidSettings(data) {
+      return data.apiKeys is map && data.systemSettings is map;
+    }
+
+    match /agents/{agentId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidAgent(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidAgent(request.resource.data);
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+
+    match /user_settings/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidSettings(request.resource.data);
+      allow delete: if isOwner(userId);
+    }
+
+    match /logs/{logId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidLog(request.resource.data);
+      allow update, delete: if false; // Logs are immutable
+    }
+
+    match /telegram_pairings/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+
+    match /bot_handshakes/{code} {
+      allow read, write, delete: if code is string && code.size() == 6;
+    }
+
+    match /telegram_messages/{messageId} {
+      allow read, update: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow create: if isValidTelegramMessage(request.resource.data);
+    }
+  }
+}

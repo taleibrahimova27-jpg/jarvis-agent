@@ -1,0 +1,5 @@
+{
+  "name": "Zaur Personal Super Agent Hub",
+  "description": "A clean, modern personal agent hub featuring Jarvis with Computer Use, Google Workspace integration, and an Agent Factory.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"]
+}

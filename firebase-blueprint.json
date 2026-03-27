@@ -1,0 +1,78 @@
+{
+  "entities": {
+    "Agent": {
+      "title": "Agent",
+      "description": "A custom AI agent created by the user.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the agent." },
+        "role": { "type": "string", "enum": ["Research", "Email", "Scheduler", "Custom"], "description": "The role of the agent." },
+        "instructions": { "type": "string", "description": "The system instructions for the agent." },
+        "memory": { "type": "string", "description": "Long-term memory or context for the agent." },
+        "userId": { "type": "string", "description": "The ID of the user who owns this agent." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the agent was created." }
+      },
+      "required": ["name", "role", "instructions", "userId"]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "A log of actions performed by Jarvis or other agents.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The ID of the user." },
+        "action": { "type": "string", "description": "The action performed." },
+        "details": { "type": "string", "description": "Detailed description of the action." },
+        "status": { "type": "string", "enum": ["success", "warning", "error", "info"], "description": "The status of the action." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the action occurred." }
+      },
+      "required": ["userId", "action", "status"]
+    },
+    "TelegramPairing": {
+      "title": "TelegramPairing",
+      "description": "Pairing information between a user and their Telegram chat ID.",
+      "type": "object",
+      "properties": {
+        "chatId": { "type": "string", "description": "The Telegram chat ID." },
+        "username": { "type": "string", "description": "The Telegram username." },
+        "firstName": { "type": "string", "description": "The Telegram first name." },
+        "pairedAt": { "type": "string", "format": "date-time", "description": "When the pairing occurred." }
+      },
+      "required": ["chatId", "pairedAt"]
+    },
+    "TelegramMessage": {
+      "title": "TelegramMessage",
+      "description": "A message received from a Telegram user.",
+      "type": "object",
+      "properties": {
+        "chatId": { "type": "string", "description": "The Telegram chat ID." },
+        "userId": { "type": "string", "description": "The ID of the user." },
+        "text": { "type": "string", "description": "The message text." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the message was received." },
+        "processed": { "type": "boolean", "description": "Whether the message has been processed by the AI." }
+      },
+      "required": ["chatId", "userId", "text", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/agents/{agentId}": {
+      "schema": "Agent",
+      "description": "User's custom agents."
+    },
+    "/logs/{logId}": {
+      "schema": "ActivityLog",
+      "description": "Activity logs for the user."
+    },
+    "/telegram_pairings/{userId}": {
+      "schema": "TelegramPairing",
+      "description": "User's Telegram pairing data."
+    },
+    "/bot_handshakes/{code}": {
+      "schema": "TelegramPairing",
+      "description": "Temporary handshake for Telegram pairing."
+    },
+    "/telegram_messages/{messageId}": {
+      "schema": "TelegramMessage",
+      "description": "Incoming messages from Telegram bot."
+    }
+  }
+}
